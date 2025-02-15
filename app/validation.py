@@ -5,6 +5,8 @@ import unicodedata
 
 
 def normalize_input(data):
+    if isinstance(data, str):
+        return unicodedata.normalize("NFKD", data)
     return data
 
 
@@ -46,4 +48,7 @@ def validate_pswd(pswd):
 
 
 def validate_name(name):
-    return True
+    if isinstance(name, str):
+        patron = r'^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s\']+$'
+        return bool(re.fullmatch(patron, name))
+    return False 
