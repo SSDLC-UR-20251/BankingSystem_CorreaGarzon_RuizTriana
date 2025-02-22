@@ -61,6 +61,11 @@
                     <td>{{ user_data['role'] }}</td>
                     <td>
                         <a href="/edit_user/{{ email }}" class="btn btn-sm btn-primary">Edit</a>
+                        {% if role == 'admin' %}
+                        <form action="{{ url_for('delete_user', email=email) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Estas seguro de eliminar el usuario?');">Delete</button>
+                        </form>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}

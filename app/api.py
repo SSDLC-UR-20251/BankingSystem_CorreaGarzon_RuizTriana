@@ -7,6 +7,10 @@ from app import app
 
 app.secret_key = 'your_secret_key'
 
+MAX_ATTEMPTS = 3  # Máximo de intentos permitidos
+LOCK_TIME = 5 * 60  # Tiempo de bloqueo en segundos (5 minutos)
+failed_attempts = {}  # Diccionario para almacenar intentos fallidos
+
 
 @app.route('/api/users', methods=['POST'])
 def create_record():
@@ -40,7 +44,6 @@ def create_record():
         return render_template('form.html', error=errores)
 
     email = normalize_input(email)
-
     db = read_db("db.txt")
     db[email] = {
         'nombre': normalize_input(nombre),
@@ -49,7 +52,7 @@ def create_record():
         'password': normalize_input(password),
         "dni": dni,
         'dob': normalize_input(dob),
-        "role":"admin"
+        "role": "admin"
     }
 
     write_db("db.txt", db)
@@ -62,6 +65,18 @@ def api_login():
     email = normalize_input(request.form['email'])
     password = normalize_input(request.form['password'])
 
+    if email in failed_attempts:
+        user_data = failed_attempts[email]
+        if user_data["intentos"] >= MAX_ATTEMPTS:
+            # Verificar si el tiempo de bloqueo ha pasado
+            if time.time() - user_data["tiempoBloqueo"] < LOCK_TIME:
+                remaining_time = LOCK_TIME - (time.time() - user_data["tiempoBloqueo"])
+                error = f"Cuenta bloqueada. Intenta nuevamente en {int(remaining_time / 60)} minutos."
+                return render_template('login.html', error=error)
+            else:
+                # Resetear el contador de intentos después del bloqueo
+                failed_attempts[email] = {"intentos": 0, "tiempoBloqueo": 0}
+
     db = read_db("db.txt")
     if email not in db:
         error = "Credenciales inválidas"
@@ -70,9 +85,21 @@ def api_login():
     password_db = db.get(email)["password"]
 
     if password_db == password :
-        session['role'] = db[email]['role']
+        failed_attempts[email] = {"intentos": 0, "tiempoBloqueo": 0}
+        session['role'] = "admin"
         return redirect(url_for('customer_menu'))
     else:
+        if email in failed_attempts:
+            failed_attempts[email]["intentos"] += 1
+        else:
+            failed_attempts[email] = {"intentos": 1, "tiempoBloqueo": 0}
+
+        if failed_attempts[email]["intentos"] >= MAX_ATTEMPTS:
+            failed_attempts[email]["tiempoBloqueo"] = time.time()
+            error = "Demasiados intentos fallidos. La cuenta está bloqueada temporalmente."
+        else:
+            error = "Credenciales inválidas"
+
         return render_template('login.html', error=error)
 
 
@@ -99,8 +126,14 @@ def customer_menu():
 @app.route('/records', methods=['GET'])
 def read_record():
     db = read_db("db.txt")
-    message = request.args.get('message', '')
-    return render_template('records.html', users=db,role=session.get('role'),message=message)
+    role = session.get('role')
+    if role == 'admin':
+        message = request.args.get('message', '')
+        return render_template('records.html', users=db,role=role, message=message)
+    else:
+        user_data = db.get(session.get('email'))
+        return render_template('user.html', users={session.get('email'): user_data}, role=role)
+    
 
 
 @app.route('/update_user/<email>', methods=['POST'])
@@ -145,3 +178,19 @@ def update_user(email):
 
     # Redirigir al usuario a la página de records con un mensaje de éxito
     return redirect(url_for('read_record', message="Información actualizada correctamente"))
+
+
+@app.route('/delete_user/<email>', methods=['POST'])
+def delete_user(email):
+    role = session.get('role')
+    if role != 'admin':
+        return redirect(url_for('read_record', error=True))
+
+    db = read_db("db.txt")
+    
+    if email in db:
+        del db[email]
+        write_db("db.txt", db)
+        return redirect(url_for('read_record', message="Usuario eliminado correctamente"))
+    else:
+        return redirect(url_for('read_record', error=True))
