@@ -1,4 +1,4 @@
-from _datetime import datetime
+from _datetime import datetime, timedelta
 import time
 from app.validation import *
 from app.reading import *
@@ -11,6 +11,29 @@ MAX_ATTEMPTS = 3
 BLOCK_TIME = 300  # 5 minutos en segundos
 app.secret_key = 'your_secret_key'
 
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=1)
+
+@app.before_request
+def check_session():
+    # Hacemos que la sesión sea permanente para que tenga una expiración
+    session.permanent = True
+    
+    # Si no hay sesión y la ruta no es la de login, redirigimos al login
+    if 'email' not in session and request.endpoint not in ['login', 'api_login']:
+        return redirect(url_for('login'))
+
+@app.route('/update_user_settings', methods=['POST'])
+def update_user_settings():
+    darkmode = request.form.get('darkmode')
+    # Si el checkbox está marcado, la preferencia será 'dark'
+    if darkmode:
+        response = make_response(redirect(url_for('edit_user')))
+        response.set_cookie('darkmode', 'dark', max_age=60*60*24*365, secure=True, httponly=True, samesite='Lax')  # La cookie durará 1 año
+    else:
+        response = make_response(redirect(url_for('edit_user')))
+        response.set_cookie('darkmode', 'light', max_age=60*60*24*365, secure=True, httponly=True, samesite='Lax')  # La cookie durará 1 año
+    
+    return response
 
 @app.route('/api/users', methods=['POST'])
 def create_record():
@@ -40,7 +63,7 @@ def create_record():
         errores.append("Apellido inválido")
 
     if errores:
-        return render_template('form.html', error=errores)
+        return render_template('form.html', error=errores,darkmode=request.cookies.get('darkmode', 'light'))
 
     email = normalize_input(email)
 
@@ -105,7 +128,7 @@ def api_login():
             remaining_attempts = MAX_ATTEMPTS - login_attempts[email]['attempts']
             error = f"Credenciales incorrectas. Tienes {remaining_attempts} intentos restantes."
 
-        return render_template('login.html', error=error)
+        return render_template('login.html', error=error,darkmode=request.cookies.get('darkmode', 'light'))
 
 
 
@@ -124,7 +147,8 @@ def customer_menu():
                            nombre=db.get(email)['nombre'],
                            balance=current_balance,
                            last_transactions=last_transactions,
-                           error=error)
+                           error=error,
+                           darkmode=request.cookies.get('darkmode', 'light'))
 
 
 # Endpoint para leer un registro
@@ -141,13 +165,14 @@ def read_record():
                                users=db,
                                role=session.get('role'),
                                message=message,
-                               )
+                               darkmode=request.cookies.get('darkmode', 'light'))
     else:
 
         return render_template('records.html',
                                users={user_email: user},
                                error=None,
-                               message=message)
+                               message=message,
+                               darkmode=request.cookies.get('darkmode', 'light'))
 
 
 @app.route('/update_user/<email>', methods=['POST'])
@@ -161,6 +186,8 @@ def update_user(email):
     nombre = request.form['nombre']
     apellido = request.form['apellido']
     errores = []
+
+    darkmode = request.form.get('darkmode')
 
     if not validate_dob(dob):
         errores.append("Fecha de nacimiento inválida")
@@ -177,7 +204,8 @@ def update_user(email):
         return render_template('edit_user.html',
                                user_data=db[email],
                                email=email,
-                               error=errores)
+                               error=errores,
+                               darkmode=request.cookies.get('darkmode', 'light'))
 
 
     db[email]['username'] = normalize_input(username)
@@ -189,6 +217,11 @@ def update_user(email):
 
     write_db("db.txt", db)
     resp = make_response(redirect(url_for('read_record', message="Información actualizada correctamente")))
+
+    if darkmode:
+        resp.set_cookie('darkmode', 'dark', max_age=60*60*24*365, secure=True, httponly=True, samesite='Lax')
+    else:
+        resp.set_cookie('darkmode', 'light', max_age=60*60*24*365, secure=True, httponly=True, samesite='Lax')
 
     # Redirigir al usuario a la página de records con un mensaje de éxito
     return resp
@@ -216,7 +249,7 @@ def api_deposit():
     if 'email' not in session:
         # Redirigir a la página de inicio de sesión si el usuario no está autenticado
         error_msg = "Por favor, inicia sesión para acceder a esta página."
-        return render_template('login.html', error=error_msg)
+        return render_template('login.html', error=error_msg,darkmode=request.cookies.get('darkmode', 'light'))
 
     deposit_balance = request.form['balance']
     deposit_email = session.get('email')
@@ -244,9 +277,10 @@ def api_deposit():
 # Endpoint para retiro
 @app.route('/api/withdraw', methods=['POST'])
 def api_withdraw():
+    db = read_db("db.txt")
     email = session.get('email')
     amount = float(request.form['balance'])
-
+    entered_password = normalize_input(request.form['password'])
     if amount <= 0:
         return redirect(url_for('customer_menu',
                                 message="La cantidad a retirar debe ser positiva",
@@ -258,6 +292,14 @@ def api_withdraw():
     if amount > current_balance:
         return redirect(url_for('customer_menu',
                                 message="Saldo insuficiente para retiro",
+                                error=True))
+    
+    print(entered_password)
+    print(db.get(email)["password"])
+
+    if not compare_salt(entered_password,  db.get(email)["password"],db.get(email)["password_salt"]):
+        return redirect(url_for('customer_menu',
+                                message="Contraseña incorrecta",
                                 error=True))
 
     transaction = {"balance": -amount, "type": "Withdrawal", "timestamp": str(datetime.now())}
@@ -273,3 +315,8 @@ def api_withdraw():
                             message="Retiro exitoso",
                             error=False))
 
+@app.route('/logout', methods=['GET'])
+def api_logout():
+    session.pop('email', None)
+    session.pop('role', None)
+    return redirect(url_for('login'))

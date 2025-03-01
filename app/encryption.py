@@ -53,12 +53,19 @@ def compare_salt(text, hash, salt):
     hash_result = hash_obj.digest()
     # convertimos a hex
     final = hash_result.hex()
-    print("final" + final)
+    print( final)
     if final == hash:
         return True
     else:
         return False
 
+    
+def compare_hashes(texto, stored_hash, salt):
+    texto_bytes = texto.encode('utf-8')
+    salt = bytes.fromhex(salt)
+    texto_salt = texto_bytes + salt
+    computed_hash = SHA256.new(texto_salt).hexdigest()  # Usar otro nombre para el hash calculado
+    return computed_hash == stored_hash  # Comparar con el hash almacenado
 
 def encrypt_aes(texto, clave):
     # Convertir el texto a bytes
