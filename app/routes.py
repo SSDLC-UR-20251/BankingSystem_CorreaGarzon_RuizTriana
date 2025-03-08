@@ -35,7 +35,8 @@ def edit_user(email):
         return redirect(url_for('records', message="Usuario no encontrado"))
 
     user_info = db[email]
-    user_info['dni']=decrypt_aes(user_info['dni'],AES_KEY)
+    dni_descifrado = decrypt_aes(user_info["dni"],user_info["nonce"], AES_KEY)  # Descifrar DNI correctamente
+    user_info['dni'] = dni_descifrado
 
     return render_template('edit_user.html', user_data=user_info, email=email)
 

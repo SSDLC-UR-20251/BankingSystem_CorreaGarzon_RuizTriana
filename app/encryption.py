@@ -1,6 +1,7 @@
-from Cryptodome.Random import get_random_bytes
-from Cryptodome.Cipher import AES
-from Cryptodome.Hash import SHA256
+from Crypto.Random import get_random_bytes
+from Crypto.Cipher import AES
+from Crypto.Hash import SHA256
+
 
 
 def hash_with_salt(texto):
@@ -23,7 +24,7 @@ def hash_with_salt(texto):
     # Devolver el hash
     return hash_result.hex(), salt.hex()
 
-AES_KEY = "Valiteni876gu123"
+AES_KEY = b"valiteni876gu123"
 
 def decrypt_aes(texto_cifrado_str, nonce_str, clave):
     # Convertir el texto cifrado y el nonce de cadena de texto a bytes

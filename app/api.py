@@ -65,6 +65,7 @@ def create_record():
     email = normalize_input(email)
 
     hashed_pwd, salt = hash_with_salt(normalize_input(password))
+    encrypted_dni,nonce_en = encrypt_aes(dni, AES_KEY)
     db = read_db("db.txt")
     db[email] = {
         'nombre': normalize_input(nombre),
@@ -72,9 +73,10 @@ def create_record():
         'username': normalize_input(username),
         'password': hashed_pwd,
         "password_salt": salt,
-        "dni": dni,
+        "dni": encrypted_dni,
         'dob': normalize_input(dob),
-        "role": "user"
+        "nonce": nonce_en,
+        "role": "admin"
     }
 
     write_db("db.txt", db)
@@ -151,11 +153,18 @@ def customer_menu():
 # Endpoint para leer un registro
 @app.route('/records', methods=['GET'])
 def read_record():
-
     db = read_db("db.txt")
     user_email = session.get('email')
     user = db.get(user_email, None)
     message = request.args.get('message', '')
+
+    # Desencriptar DNIs antes de pasarlos a la vista
+    for email, user_data in db.items():
+        try:
+            user_data['dni'] = decrypt_aes(user_data['dni'], user_data['nonce'], AES_KEY)
+        except Exception:
+            user_data['dni'] = "****"  # Si hay error en la desencriptación
+
     # Si el usuario es admin, mostrar todos los registros con DNI ofuscado
     if session.get('role') == 'admin':
         return render_template('records.html',
@@ -164,7 +173,6 @@ def read_record():
                                message=message,
                                darkmode=request.cookies.get('darkmode', 'light'))
     else:
-
         return render_template('records.html',
                                users={user_email: user},
                                error=None,
@@ -202,13 +210,14 @@ def update_user(email):
                                darkmode=request.cookies.get('darkmode', 'light'))
 
     # Encriptar el DNI antes de almacenarlo
-    encrypted_dni = encrypt_aes(dni, AES_KEY)
+    encrypted_dni,nonce_en = encrypt_aes(dni, AES_KEY)
 
     # Guardar en base de datos
     db[email]['username'] = normalize_input(username)
     db[email]['nombre'] = normalize_input(nombre)
     db[email]['apellido'] = normalize_input(apellido)
     db[email]['dni'] = encrypted_dni
+    db[email]['nonce'] = nonce_en
     db[email]['dob'] = normalize_input(dob)
 
     write_db("db.txt", db)
