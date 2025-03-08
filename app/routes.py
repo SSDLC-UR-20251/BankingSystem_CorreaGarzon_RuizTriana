@@ -1,6 +1,6 @@
 from flask import render_template, redirect, url_for,request, session
 from app import app
-from app.encryption import decrypt_aes, ofuscar_dni
+from app.encryption import decrypt_aes, ofuscar_dni, AES_KEY
 from app.reading import read_db
 
 # app.secret_key = 'your_secret_key'
@@ -35,6 +35,7 @@ def edit_user(email):
         return redirect(url_for('records', message="Usuario no encontrado"))
 
     user_info = db[email]
+    user_info['dni']=decrypt_aes(user_info['dni'],AES_KEY)
 
     return render_template('edit_user.html', user_data=user_info, email=email)
 

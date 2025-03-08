@@ -57,7 +57,13 @@
                     <td>{{ user_data['nombre'] }}</td>
                     <td>{{ user_data['apellido'] }}</td>
                     <td>{{ user_data['username'] }}</td>
-                    <td>{{ user_data['dni'] }}</td>
+                    <td>
+                        {% if user_data['dni']|length > 4 %}
+                            ****{{ user_data['dni'][-4:] }}
+                        {% else %}
+                            {{ user_data['dni'] }}
+                        {% endif %}
+                    </td>
                     <td>{{ user_data['dob'] }}</td>
                     <td>{{ user_data['role'] }}</td>
                     <td>

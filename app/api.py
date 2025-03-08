@@ -13,14 +13,11 @@ app.secret_key = 'your_secret_key'
 
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=1)
 
-@app.before_request
-def check_session():
-    # Hacemos que la sesión sea permanente para que tenga una expiración
-    session.permanent = True
-    
-    # Si no hay sesión y la ruta no es la de login, redirigimos al login
-    if 'email' not in session and request.endpoint not in ['login', 'api_login']:
-        return redirect(url_for('login'))
+def mask_dni(dni):
+    """Oculta todos los dígitos del DNI excepto los últimos 4"""
+    if not dni or len(dni) < 4:
+        return "****"
+    return "*" * (len(dni) - 4) + dni[-4:]
 
 @app.route('/update_user_settings', methods=['POST'])
 def update_user_settings():
@@ -177,16 +174,13 @@ def read_record():
 
 @app.route('/update_user/<email>', methods=['POST'])
 def update_user(email):
-    # Leer la base de datos de usuarios
     db = read_db("db.txt")
-
     username = request.form['username']
     dni = request.form['dni']
     dob = request.form['dob']
     nombre = request.form['nombre']
     apellido = request.form['apellido']
     errores = []
-
     darkmode = request.form.get('darkmode')
 
     if not validate_dob(dob):
@@ -207,13 +201,15 @@ def update_user(email):
                                error=errores,
                                darkmode=request.cookies.get('darkmode', 'light'))
 
+    # Encriptar el DNI antes de almacenarlo
+    encrypted_dni = encrypt_aes(dni, AES_KEY)
 
+    # Guardar en base de datos
     db[email]['username'] = normalize_input(username)
     db[email]['nombre'] = normalize_input(nombre)
     db[email]['apellido'] = normalize_input(apellido)
-    db[email]['dni'] = dni
+    db[email]['dni'] = encrypted_dni
     db[email]['dob'] = normalize_input(dob)
-
 
     write_db("db.txt", db)
     resp = make_response(redirect(url_for('read_record', message="Información actualizada correctamente")))
@@ -223,8 +219,8 @@ def update_user(email):
     else:
         resp.set_cookie('darkmode', 'light', max_age=60*60*24*365, secure=True, httponly=True, samesite='Lax')
 
-    # Redirigir al usuario a la página de records con un mensaje de éxito
     return resp
+
 
 @app.route('/api/delete_user/<email>', methods=['GET'])
 def delete_user(email):
