@@ -134,6 +134,8 @@ def api_login():
 # Página principal del menú del cliente
 @app.route('/customer_menu')
 def customer_menu():
+    if 'email' not in session:
+        return redirect(url_for('login'))
     email = session.get('email')
     db = read_db("db.txt")
     transactions = read_db("transaction.txt")
