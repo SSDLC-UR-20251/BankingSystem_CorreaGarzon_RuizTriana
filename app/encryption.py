@@ -1,6 +1,6 @@
-from Crypto.Random import get_random_bytes
-from Crypto.Cipher import AES
-from Crypto.Hash import SHA256
+from Cryptodome.Random import get_random_bytes
+from Cryptodome.Cipher import AES
+from Cryptodome.Hash import SHA256
 
 
 

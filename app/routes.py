@@ -12,9 +12,9 @@ def index():
 
 @app.route('/deposit', methods=['GET'])
 def deposit():
-
-    return render_template('deposit.html',darkmode=request.cookies.get('darkmode', 'light'))
-
+     if 'email' not in session:
+        return redirect(url_for('login'))
+     return render_template('deposit.html', darkmode=request.cookies.get('darkmode', 'light'))
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
@@ -28,7 +28,8 @@ def login():
 
 @app.route('/edit_user/<email>', methods=['GET'])
 def edit_user(email):
-
+    if 'email' not in session:
+        return redirect(url_for('login'))
     db = read_db("db.txt")
 
     if email not in db:
@@ -44,8 +45,10 @@ def edit_user(email):
 # Formulario de retiro
 @app.route('/withdraw', methods=['GET'])
 def withdraw():
+    if 'email' not in session:
+        return redirect(url_for('login'))
     email = session.get('email')
     print(email)
     transactions = read_db("transaction.txt")
     current_balance = sum(float(t['balance']) for t in transactions.get(email, []))
-    return render_template('withdraw.html', balance=current_balance,darkmode=request.cookies.get('darkmode', 'light'))
+    return (render_template('withdraw.html', balance=current_balance,darkmode=request.cookies.get('darkmode', 'light')))
