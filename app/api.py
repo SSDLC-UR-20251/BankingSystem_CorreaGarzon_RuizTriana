@@ -11,7 +11,7 @@ MAX_ATTEMPTS = 3
 BLOCK_TIME = 300  # 5 minutos en segundos
 app.secret_key = 'your_secret_key'
 
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=1)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=5)
 
 def mask_dni(dni):
     """Oculta todos los dígitos del DNI excepto los últimos 4"""
