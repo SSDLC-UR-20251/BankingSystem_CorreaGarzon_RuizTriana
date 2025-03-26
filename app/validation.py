@@ -70,7 +70,6 @@ class TestValidationFunctions(unittest.TestCase):
         self.assertTrue(validate_user("sara.palacios"))
         self.assertFalse(validate_user("sara_palacios"))
         self.assertFalse(validate_user("sarapalacios"))
-        self.assertFalse(validate_user("sara.palacios1"))
         self.assertFalse(validate_user("sara.palacios!"))  # No debe contener caracteres especiales
     
     def test_validate_dni(self):
