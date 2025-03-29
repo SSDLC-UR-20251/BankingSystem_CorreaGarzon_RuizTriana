@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        PYTHON_ENV = 'venv'
-    }
-
     stages {
         stage('Clonar código') {
             steps {
@@ -36,8 +32,6 @@ pipeline {
         stage('Instalar dependencias') {
             steps {
                 sh '''
-                    python3 -m venv ${PYTHON_ENV}
-                    source ${PYTHON_ENV}/bin/activate
                     pip install --upgrade pip
                     pip install selenium
                 '''
