@@ -10,8 +10,7 @@ driver = webdriver.Chrome()
 driver.get("http://127.0.0.1:5000/login")
 
 # Iniciar sesión
-driver.find_element(By.ID, "email").send_keys("sara.palaciosc@urosario.edu.co")
-driver.find_element(By.ID, "password").send_keys("ELZN-ayGhj4WbaBaDKqL")
+
 driver.find_element(By.ID, "login").click()
 
 time.sleep(2)  # Esperar a que cargue la página
