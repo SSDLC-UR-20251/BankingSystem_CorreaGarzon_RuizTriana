@@ -71,17 +71,17 @@ jobs:
           name: secrets
           path: secrets.json
 
-    semgrep:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  semgrep:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
 
-      - name: Run Semgrep SAST
-        uses: returntocorp/semgrep-action@v1
-        with:
-          config: "p/ci"
-        env:
-          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+        - name: Run Semgrep SAST
+          uses: returntocorp/semgrep-action@v1
+          with:
+            config: "p/ci"
+          env:
+            SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
    
 
