@@ -1,0 +1,2 @@
+- name: detect-secrets Action
+  uses: perryzjc/detect-secrets-action@v1.1.1
