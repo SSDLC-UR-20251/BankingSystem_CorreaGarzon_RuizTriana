@@ -4,7 +4,7 @@ from app.validation import *
 from app.reading import *
 from flask import request, jsonify, redirect, url_for, render_template, session, make_response
 from app import app
-
+from app.encryption import *
 
 @app.route('/api/users', methods=['POST'])
 def create_record():
@@ -40,11 +40,14 @@ def create_record():
     email = normalize_input(email)
 
     db = read_db("db.txt")
+    contraseña = hash_with_salt(normalize_input(password))
+    salt = contraseña[1]
     db[email] = {
         'nombre': normalize_input(nombre),
         'apellido': normalize_input(apellido),
         'username': normalize_input(username),
-        'password': normalize_input(password),
+        'password': contraseña[0],
+        'salt': salt,
         "dni": dni,
         'dob': normalize_input(dob),
     }
@@ -59,17 +62,20 @@ def create_record():
 def api_login():
     email = normalize_input(request.form['email'])
     password = normalize_input(request.form['password'])
-
     db = read_db("db.txt")
+    valor = compare_hashes(password, db.get(email)["password"], db.get(email)["salt"])
+
+    
     if email not in db:
         error = "Credenciales inválidas"
         return render_template('login.html', error=error)
 
-    password_db = db.get(email)["password"]
+    
 
-    if password_db == password :
+    if valor == True:
         return redirect(url_for('customer_menu'))
     else:
+        error = "Credenciales inválidas"
         return render_template('login.html', error=error)
 
 
