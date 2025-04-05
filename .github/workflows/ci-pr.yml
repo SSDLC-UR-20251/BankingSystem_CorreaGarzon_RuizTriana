@@ -1,2 +1,20 @@
 - name: detect-secrets Action
-  uses: perryzjc/detect-secrets-action@v1.1.1
+  on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+  jobs:
+    build:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+
+
+        - uses: perryzjc/detect-secrets-action@v1.1.1
