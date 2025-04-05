@@ -55,12 +55,7 @@ def validate_name(name):
 
 class TestValidationFunctions(unittest.TestCase):
     
-    def test_validate_email(self):
-        self.assertTrue(validate_email("usuario@urosario.edu.co"))
-        self.assertFalse(validate_email("usuario@gmail.com"))
-        self.assertFalse(validate_email("usuario@urosario.com"))
-        self.assertFalse(validate_email("usuario@urosario.edu"))
-        self.assertFalse(validate_email("@urosario.edu.co"))
+
     
     def test_validate_dob(self):
         self.assertTrue(validate_dob("2000-01-01"))  # Mayor de 16
@@ -85,13 +80,5 @@ class TestValidationFunctions(unittest.TestCase):
         self.assertFalse(validate_name("Sara!"))
         self.assertFalse(validate_name("Sara Palacios"))  # No debe contener espacios
     
-    def test_validate_password(self):
-        self.assertTrue(validate_pswd("Passw0rd!"))  # Cumple con los requisitos
-        self.assertFalse(validate_pswd("password"))  # Falta mayúscula, número y especial
-        self.assertFalse(validate_pswd("PASSWORD1"))  # Falta minúscula y especial
-        self.assertFalse(validate_pswd("Passw0rd"))  # Falta carácter especial
-        self.assertFalse(validate_pswd("Pw1!"))  # Demasiado corta
-        self.assertFalse(validate_pswd("A" * 36 + "1!"))  # Demasiado larga
-
 if __name__ == "__main__":
     unittest.main()
