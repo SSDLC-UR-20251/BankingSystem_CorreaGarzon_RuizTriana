@@ -44,7 +44,7 @@ jobs:
           cp .secrets.baseline .secrets.new
 
           # find the secrets in the repository
-          detect-secrets scan --baseline .secrets.new --exclude-files '.secrets.*' --exclude-files '.git*'
+          detect-secrets scan --baseline .secrets.new --exclude-files '.secrets.*' --exclude-files '.git*' >> secrets.json
                
           # if there is any difference between the known and newly detected secrets, break the build
           # Function to compare secrets without listing them
