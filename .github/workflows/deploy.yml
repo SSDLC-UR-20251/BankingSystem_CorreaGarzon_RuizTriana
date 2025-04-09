@@ -21,8 +21,8 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ghcr.io/bankingsystemcorrearuiz:latest .
+          docker build -t ghcr.io/juann227/bankingsystem_correagarzon_ruiztriana:latest .
 
       - name: Push Docker image
         run: |
-          docker push ghcr.io/bankingsystemcorrearuiz:latest
+          docker push ghcr.io/juann227/bankingsystem_correagarzon_ruiztriana:latest
