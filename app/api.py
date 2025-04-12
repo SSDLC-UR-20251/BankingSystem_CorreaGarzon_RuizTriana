@@ -106,18 +106,19 @@ def filterScriptTags(content):
     oldContent = ""
     while oldContent != content:
         oldContent = content
-        content = re.sub(r'<script.*?>.*?</script>', '', content, flags= re.DOTALL | re.IGNORECASE)
+        content = re.sub(r'<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>', '', content, flags=re.IGNORECASE)
     return content
 
 # VULNERABILIDAD: NoSQL Injection
 from flask_pymongo import PyMongo
 import json
-
+from mongosanitizer.sanitizer import sanitize
 mongo = PyMongo(app)
 
 @app.route("/insecure_query")
 def home_page():
-    unsanitized_search = request.args['search']
-    json_search = json.loads(unsanitized_search)
-    result = mongo.db.user.find({'name': json_search})
+    unsafe_search = request.args['search']
+    json_search = json.loads(unsafe_search)
+    safe_search = sanitize(json_search)
+    result = mongo.db.user.find({'name': safe_search})
     return str(result)
