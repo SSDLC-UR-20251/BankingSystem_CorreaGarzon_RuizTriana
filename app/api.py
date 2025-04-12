@@ -122,29 +122,40 @@ def home_page():
     return str(result)
 
 # --- Vulnerabilidad 3: Conflicting attributes in base classes ---
+import threading
+
 class TCPServer(object):
+    
     def process_request(self, request, client_address):
-        print("TCPServer handling request")
+        self.do_work(request, client_address)
         self.shutdown_request(request)
 
+    def do_work(self, request, client_address):
+        print("Doing work in TCPServer")
+
     def shutdown_request(self, request):
-        print("TCPServer shutting down request")
+        print("Shutting down request")
 
 
 class ThreadingMixIn:
     """Mix-in class to handle each request in a new thread."""
 
     def process_request(self, request, client_address):
-        print("ThreadingMixIn handling request in thread")
-        # Simulación de trabajo con hilos (sin threading real para simplicidad)
+        """Start a new thread to process the request."""
+        t = threading.Thread(target=self.do_work, args=(request, client_address))
+        t.daemon = self.daemon_threads
+        t.start()
+
+    @property
+    def daemon_threads(self):
+        return True
 
 
 class ThreadingTCPServer(ThreadingMixIn, TCPServer):
     pass
 
 
-# Simulación de una llamada
-# Esta parte solo sirve para que GitHub dispare la alerta al ver su ejecución
-def simulate_conflict():
+# Ejecución simulada para asegurar que se tome en cuenta en el análisis
+def run_conflicting_example():
     server = ThreadingTCPServer()
-    server.process_request("req", "client_addr")
+    server.process_request("sample_request", "127.0.0.1")
