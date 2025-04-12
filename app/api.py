@@ -100,15 +100,12 @@ def read_record():
 
 
 
-import re
+# --- Vulnerabilidad 4: Side-effect dentro de assert ---
+import subprocess
 
-def match_data(data):
-    # Expresión con \b mal usado dentro de una clase de caracteres
-    pattern = re.compile(r"\b[\t\b]")
-    return bool(pattern.match(data))
-
-# Llamada explícita para forzar ejecución en análisis
-match_data("\t")
+def backup():
+    # Llamar a un comando externo y verificar éxito, pero incorrectamente con assert
+    assert subprocess.call(['echo', 'realizando respaldo']) == 0
 
 # VULNERABILIDAD: NoSQL Injection
 from flask_pymongo import PyMongo
