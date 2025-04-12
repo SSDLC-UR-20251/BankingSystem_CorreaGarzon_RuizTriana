@@ -97,3 +97,27 @@ def customer_menu():
 def read_record():
     db = read_db("db.txt")
     return render_template('records.html', users=db)
+
+
+
+# VULNERABILIDAD: Uso incorrecto de \b dentro de clase de caracteres
+import re
+matcher = re.compile(r"\b[\t\b]")
+
+def match_data(data):
+    return bool(matcher.match(data))
+
+
+# VULNERABILIDAD: NoSQL Injection
+from flask_pymongo import PyMongo
+import json
+
+mongo = PyMongo(app)
+
+@app.route("/insecure_query")
+def home_page():
+    unsanitized_search = request.args['search']
+    json_search = json.loads(unsanitized_search)
+    result = mongo.db.user.find({'name': json_search})
+    return str(result)
+
