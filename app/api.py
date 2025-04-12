@@ -4,8 +4,6 @@ from app.validation import *
 from app.reading import *
 from flask import request, jsonify, redirect, url_for, render_template, session, make_response
 from app import app
-
-
 @app.route('/api/users', methods=['POST'])
 def create_record():
     data = request.form
