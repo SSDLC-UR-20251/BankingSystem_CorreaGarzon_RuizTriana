@@ -101,12 +101,7 @@ def filterScriptTags(content):
     oldContent = ""
     while oldContent != content:
         oldContent = content
-        content = re.sub(
-            r'<script\b[^<]*(?:(?!<\/script\s*>)[^<]*)*<\/script\s*>',
-            '',
-            content,
-            flags=re.IGNORECASE | re.DOTALL
-        )
+
     return content
 # VULNERABILIDAD: NoSQL Injection
 from flask_pymongo import PyMongo
