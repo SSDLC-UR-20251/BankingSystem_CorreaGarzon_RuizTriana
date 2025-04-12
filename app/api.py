@@ -100,12 +100,14 @@ def read_record():
 
 
 
-# --- Vulnerabilidad 4: Side-effect dentro de assert ---
-import subprocess
+import re
 
-def backup():
-    # Llamar a un comando externo y verificar éxito, pero incorrectamente con assert
-    assert subprocess.call(['echo', 'realizando respaldo']) == 0
+def filterScriptTags(content): 
+    oldContent = ""
+    while oldContent != content:
+        oldContent = content
+        content = re.sub(r'<script.*?>.*?</script>', '', content, flags= re.DOTALL | re.IGNORECASE)
+    return content
 
 # VULNERABILIDAD: NoSQL Injection
 from flask_pymongo import PyMongo
