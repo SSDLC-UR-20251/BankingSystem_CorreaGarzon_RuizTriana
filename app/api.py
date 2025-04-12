@@ -97,3 +97,24 @@ def customer_menu():
 def read_record():
     db = read_db("db.txt")
     return render_template('records.html', users=db)
+
+import re
+def filterScriptTags(content):
+    oldContent = ""
+    while oldContent != content:
+        oldContent = content
+
+    return content
+# VULNERABILIDAD: NoSQL Injection
+from flask_pymongo import PyMongo
+import json
+from mongosanitizer.sanitizer import sanitize
+mongo = PyMongo(app)
+
+@app.route("/insecure_query")
+def home_page():
+    unsafe_search = request.args['search']
+    json_search = json.loads(unsafe_search)
+    safe_search = sanitize(json_search)
+    result = mongo.db.user.find({'name': safe_search})
+    return str(result)
