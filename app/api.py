@@ -99,12 +99,16 @@ def read_record():
 
 
 import re
-
-def filterScriptTags(content): 
+def filterScriptTags(content):
     oldContent = ""
     while oldContent != content:
         oldContent = content
-        content = re.sub(r'<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>', '', content, flags=re.IGNORECASE)
+        content = re.sub(
+            r'<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>',
+            '',
+            content,
+            flags=re.IGNORECASE
+        )
     return content
 
 # VULNERABILIDAD: NoSQL Injection
