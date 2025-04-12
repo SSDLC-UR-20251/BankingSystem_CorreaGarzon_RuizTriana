@@ -121,3 +121,30 @@ def home_page():
     result = mongo.db.user.find({'name': json_search})
     return str(result)
 
+# --- Vulnerabilidad 3: Conflicting attributes in base classes ---
+class TCPServer(object):
+    def process_request(self, request, client_address):
+        print("TCPServer handling request")
+        self.shutdown_request(request)
+
+    def shutdown_request(self, request):
+        print("TCPServer shutting down request")
+
+
+class ThreadingMixIn:
+    """Mix-in class to handle each request in a new thread."""
+
+    def process_request(self, request, client_address):
+        print("ThreadingMixIn handling request in thread")
+        # Simulación de trabajo con hilos (sin threading real para simplicidad)
+
+
+class ThreadingTCPServer(ThreadingMixIn, TCPServer):
+    pass
+
+
+# Simulación de una llamada
+# Esta parte solo sirve para que GitHub dispare la alerta al ver su ejecución
+def simulate_conflict():
+    server = ThreadingTCPServer()
+    server.process_request("req", "client_addr")
