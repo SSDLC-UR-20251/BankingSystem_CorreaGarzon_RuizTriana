@@ -100,13 +100,15 @@ def read_record():
 
 
 
-# VULNERABILIDAD: Uso incorrecto de \b dentro de clase de caracteres
 import re
-matcher = re.compile(r"\b[\t\b]")
 
 def match_data(data):
-    return bool(matcher.match(data))
+    # Expresión con \b mal usado dentro de una clase de caracteres
+    pattern = re.compile(r"\b[\t\b]")
+    return bool(pattern.match(data))
 
+# Llamada explícita para forzar ejecución en análisis
+match_data("\t")
 
 # VULNERABILIDAD: NoSQL Injection
 from flask_pymongo import PyMongo
@@ -120,42 +122,3 @@ def home_page():
     json_search = json.loads(unsanitized_search)
     result = mongo.db.user.find({'name': json_search})
     return str(result)
-
-# --- Vulnerabilidad 3: Conflicting attributes in base classes ---
-import threading
-
-class TCPServer(object):
-    
-    def process_request(self, request, client_address):
-        self.do_work(request, client_address)
-        self.shutdown_request(request)
-
-    def do_work(self, request, client_address):
-        print("Doing work in TCPServer")
-
-    def shutdown_request(self, request):
-        print("Shutting down request")
-
-
-class ThreadingMixIn:
-    """Mix-in class to handle each request in a new thread."""
-
-    def process_request(self, request, client_address):
-        """Start a new thread to process the request."""
-        t = threading.Thread(target=self.do_work, args=(request, client_address))
-        t.daemon = self.daemon_threads
-        t.start()
-
-    @property
-    def daemon_threads(self):
-        return True
-
-
-class ThreadingTCPServer(ThreadingMixIn, TCPServer):
-    pass
-
-
-# Ejecución simulada para asegurar que se tome en cuenta en el análisis
-def run_conflicting_example():
-    server = ThreadingTCPServer()
-    server.process_request("sample_request", "127.0.0.1")
