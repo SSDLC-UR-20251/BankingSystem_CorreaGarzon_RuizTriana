@@ -98,21 +98,18 @@ def read_record():
     db = read_db("db.txt")
     return render_template('records.html', users=db)
 
-
-
 import re
 def filterScriptTags(content):
     oldContent = ""
     while oldContent != content:
         oldContent = content
         content = re.sub(
-            r'<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>',
+            r'<script\b[^<]*(?:(?!<\/script\s*>)[^<]*)*<\/script\s*>',
             '',
             content,
-            flags=re.IGNORECASE
+            flags=re.IGNORECASE | re.DOTALL
         )
     return content
-
 # VULNERABILIDAD: NoSQL Injection
 from flask_pymongo import PyMongo
 import json
